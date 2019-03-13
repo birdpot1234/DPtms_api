@@ -121,18 +121,8 @@ const model = {
             });
         })
     },
-    get_report_form_account(date, hub, callback) {
+    get_report_form_account(date, callback) {
         sql.close()
-        var sql_where = ""
-        switch (hub) {
-            case "WS1":
-                sql_where = "AND inventlocationid LIKE '" + hub + "' AND convert(varchar(10),invoice_date,120) ='"+ date + "'"
-                break;
-            default:
-                sql_where = "AND inventlocationid NOT LIKE '" + hub + "' AND convert(varchar(10),clear_date,120) ='"+ date + "' "
-                break;
-        }
-
         const pool = new sql.ConnectionPool(dbConnectData_TransportApp)
         pool.connect(err => {
             if (err) {
@@ -141,15 +131,15 @@ const model = {
             }
             var req = new sql.Request(pool)
             var sql_query = "SELECT * FROM            TMS_Report_Form_Account \
-        WHERE sales_group LIKE 'Dealer - กรุงเทพฯ' AND payment_type LIKE 'CASH' "+sql_where+" \
+        WHERE sales_group LIKE 'Dealer - กรุงเทพฯ' AND payment_type LIKE 'CASH' AND convert(varchar(10),invoice_date,120) ='"+ date + "' \
         ORDER BY invoice \
         SELECT * FROM            TMS_Report_Form_Account \
-        WHERE sales_group LIKE 'Dealer - กรุงเทพฯ' AND payment_type NOT LIKE 'CASH' "+sql_where+" \
+        WHERE sales_group LIKE 'Dealer - กรุงเทพฯ' AND payment_type NOT LIKE 'CASH' AND convert(varchar(10),invoice_date,120) ='"+ date + "' \
         ORDER BY invoice \
         SELECT *  FROM            TMS_Report_Form_Account \
-        WHERE sales_group NOT LIKE 'Dealer - กรุงเทพฯ' "+ sql_where + " \
+        WHERE sales_group NOT LIKE 'Dealer - กรุงเทพฯ' AND convert(varchar(10),invoice_date,120) ='"+ date + "' \
         ORDER BY invoice "
-            console.log("sql_query", sql_query);
+        // console.log("sql_query",sql_query);
             req.query(sql_query).then((result, err) => {
                 // console.log("result",result.recordsets[0]);
                 pool.close()
@@ -200,8 +190,6 @@ const model = {
                      ,TMS_Report_Form_Account.[cn_amount]		=TMS_Report_Account.[Amount] \
                      ,TMS_Report_Form_Account.[comment]		=TMS_Report_Account.[Comment] \
                      ,TMS_Report_Form_Account.[car_type]		=TMS_Report_Account.[car_type] \
-                     ,TMS_Report_Form_Account.[dpl_hub_dlvterm]		=TMS_Report_Account.[dpl_hub_dlvterm]\
-                     ,TMS_Report_Form_Account.[inventlocationid]		=TMS_Report_Account.[inventlocationid]\
           WHEN NOT MATCHED THEN \
             INSERT  \
                       ([tms_doc] \
@@ -224,9 +212,7 @@ const model = {
                      ,[cn_doc] \
                      ,[cn_amount] \
                      ,[comment] \
-                     ,[car_type]\
-                     ,[dpl_hub_dlvterm] \
-                     ,[inventlocationid]) \
+                     ,[car_type]) \
             VALUES \
               (TMS_Report_Account.[DocumentSet] \
               ,TMS_Report_Account.[create_date] \
@@ -248,9 +234,7 @@ const model = {
               ,TMS_Report_Account.[CNDoc] \
               ,TMS_Report_Account.[Amount] \
               ,TMS_Report_Account.[Comment] \
-              ,TMS_Report_Account.[car_type]\
-              ,TMS_Report_Account.[dpl_hub_dlvterm] \
-              ,TMS_Report_Account.[inventlocationid]); \
+              ,TMS_Report_Account.[car_type]); \
               MERGE INTO \
                 TMS_Report_Form_Account\
                 USING\
@@ -268,8 +252,6 @@ const model = {
                         ,TMS_Report_Form_Account.[mess_id]		='MDL_55'\
                         ,TMS_Report_Form_Account.[mess_name]		='Kerry-DHL'\
                         ,TMS_Report_Form_Account.[sales_group]	=TMS_Report_Account.[sales_group]\
-                        ,TMS_Report_Form_Account.[dpl_hub_dlvterm]		=TMS_Report_Account.[dpl_hub_dlvterm]\
-                        ,TMS_Report_Form_Account.[inventlocationid]		=TMS_Report_Account.[inventlocationid]\
                 WHEN NOT MATCHED THEN\
                 INSERT \
                             ([tms_doc]\
@@ -287,8 +269,6 @@ const model = {
                         ,[mess_id]\
                         ,[mess_name]\
                         ,[sales_group]\
-                        ,[dpl_hub_dlvterm] \
-                        ,[inventlocationid]\
                 )\
                 VALUES\
                     (TMS_Report_Account.[tms_document]\
@@ -306,8 +286,6 @@ const model = {
                     ,'MDL-55'\
                     ,'Kerry-DHL'\
                     ,TMS_Report_Account.[sales_group]\
-                    ,[dpl_hub_dlvterm] \
-                    ,[inventlocationid]\
                 );"
             // var sql_query = "SELECT        dbo.Report.ClearingStatus, dbo.Report.INVOICEID, dbo.Report.DocumentSet, dbo.Report.CustomerID, dbo.Report.CustomerName, dbo.Report.AddressShipment, dbo.Report.Status, dbo.Report.AmountBill, \
             // dbo.Report.AmountActual, dbo.Report.Type, dbo.Report.Datetime, dbo.Report.ReasonCN, dbo.Report.ClearingDate, dbo.Report.paymentType, dbo.Report.MessengerID, CONVERT(varchar(10), dbo.TMS_Interface.create_date, 120) \
@@ -316,7 +294,7 @@ const model = {
             //                           dbo.TMS_Interface ON dbo.Report.DocumentSet = dbo.TMS_Interface.tms_document INNER JOIN \
             //                           dbo.BillToApp ON dbo.Report.DocumentSet = dbo.BillToApp.DocumentSet \
             // WHERE        (dbo.Report.ClearingStatus = '0') AND (CONVERT(varchar(10), dbo.TMS_Interface.create_date, 120) LIKE '"+ date + "' ) AND (dbo.Report.MessengerID LIKE '" + mess_code + "%')"
-            console.log("object", sql_query)
+            // console.log("object", sql_query)
             req.query(sql_query).then((result, err) => {
                 pool.close()
                 // console.log("result",result);
@@ -370,34 +348,6 @@ const model = {
             }).catch((err) => {
                 if (err) {
                     save_log(err, "update_clear_detail", "Report", err)
-                    callback(server_response(500, "Error", err))
-                }
-            });
-        })
-    },
-    update_comment(id,in_comment, callback) {
-        sql.close()
-        const pool = new sql.ConnectionPool(dbConnectData_TransportApp)
-        pool.connect(err => {
-            if (err) {
-                save_log(err, "update_comment", "Report", err)
-                callback(server_response(500, "Error", err))
-            }
-            var req = new sql.Request(pool)
-            var sql_query="UPDATE Report SET Comment='"+in_comment+"' WHERE id LIKE '"+id+"' "
-            req.query(sql_query).then((result, err) => {
-                pool.close()
-                console.log("result", result)
-                if (result.rowsAffected > 0) {
-                    save_log(result.recordset, "update_comment", "Report", result.recordset)
-                    callback(server_response(200, "Success", result.recordset))
-                } else {
-                    save_log(result.recordset, "update_comment", "Report", result.recordset)
-                    callback(server_response(304, "None data this query", result.recordset))
-                }
-            }).catch((err) => {
-                if (err) {
-                    save_log(err, "update_comment", "Report", err)
                     callback(server_response(500, "Error", err))
                 }
             });

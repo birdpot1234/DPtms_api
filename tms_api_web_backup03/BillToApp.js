@@ -27,7 +27,7 @@ const model = {
             }
             var req = new sql.Request(pool)
 
-            var sql_query = "SELECT    dbo.BillToApp.INVOICEID, dbo.BillToApp.DocumentSet, dbo.BillToApp.CustomerName, dbo.Messenger.IDMess, dbo.Messenger.MessName, dbo.App_workApp.status \
+            var sql_query = "SELECT      dbo.BillToApp.INVOICEID, dbo.BillToApp.DocumentSet, dbo.BillToApp.CustomerName, dbo.Messenger.IDMess, dbo.Messenger.MessName, dbo.App_workApp.status \
             FROM            dbo.BillToApp LEFT OUTER JOIN \
                                      dbo.App_workApp ON dbo.BillToApp.INVOICEID = dbo.App_workApp.invoiceNumber LEFT OUTER JOIN \
                                      dbo.Messenger ON dbo.BillToApp.MessengerID = dbo.Messenger.IDMess \
