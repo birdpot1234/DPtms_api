@@ -79,8 +79,7 @@ const authAPI = () => new Promise((resolve, reject) => {
         setTimeout(() => null, 0);
         return res.json()
     }).then(async json => {
-        token = json.accessTokenResponse.token
-        resolve({ token })
+        resolve({ token: json.accessTokenResponse.token })
     }).catch((err) => console.log(err))
 })
 
