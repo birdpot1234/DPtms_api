@@ -18,17 +18,7 @@ var sql = require("mssql");
     var jsonRequest = req.body.tms
 
 
-    // let tms_doc = req.body.tms_doc;
-    // let invoice = req.body.invoice;
-    // let box     = req.body.box;
-    // let car_type = req.body.car_type;
-    // let staff1   = req.body.staff1;
-    // let staff2   = req.body.staff2;
-    // let staff3   = req.body.staff3;
-    // let trip     = req.body.trip;
-    // let Mess     = req.body.Mess;
-    
-    //let Zone     = req.body.Zone;
+
      async function main(){ 
          var strInsertBill =''
         for(let i in jsonRequest)
