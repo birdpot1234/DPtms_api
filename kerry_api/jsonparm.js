@@ -7,7 +7,7 @@ module.exports = {
         var body={ req:
             {
                 shipment: {
-                    con_no: 'ina184488484967',
+                    con_no: arr.invoice,
                     s_name: "บริษัท ดีพลัส อินเตอร์เทรด จำกัด",
                     s_address: "123/20-22 ถนนนนทรี แขวงช่องนนทรี เขตยานนาวา กรุงเทพฯ 10120",
                     s_village: "",

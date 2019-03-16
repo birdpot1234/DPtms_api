@@ -3,10 +3,12 @@ const sql = require('mssql')
 const request = require('request')
 const fetch = require('node-fetch')
 var parm = require('../kerry_api/jsonparm');
-// var fn_kerry = require('../kerry_api/function_kerry');
+
 let pool;
 let kerry_no = null;
-
+let arr_success = '{"success":[],"false":[]}'
+let obj_arr = JSON.parse(arr_success)
+let arr_false = [];
 
 const getAddress = async (inv) => {
     console.log('er')
@@ -37,14 +39,23 @@ const setFormatch = async (obj) => {
             return str
 }
 
+
+
+const log = async (data) =>{
+ console.log("success",data)
+
+}
 const loop_kerry = async (data) =>{
+    return new Promise((resolve, reject) => { 
+         setTimeout(()=>{resolve("Delay Hello"); 
+         }, 500); 
     for(let i=0;i<data.length;i++){
         console.log("num",i)
       let log = call_kerry(data[i])
       
     }
-
-}
+     }); 
+   } 
 
 
 
@@ -63,7 +74,14 @@ const call_kerry = (arr) => new Promise((resolve, reject) => {
        
         return res.json()
     }).then(async json => {
-        console.log(json)
+       
+       
+        let result_success = json.res.shipment
+        let con = []
+        result_success.status_code==000?obj_arr['success'].push({"con_no":result_success.con_no,"status":result_success.status_code,"status_des":result_success.status_desc})
+        :obj_arr['false'].push({"con_no":result_success.con_no,"status":result_success.status_code,"status_des":result_success.status_desc})
+        
+        
      
     }).catch((err) => console.log(err))
 })
@@ -71,6 +89,7 @@ const call_kerry = (arr) => new Promise((resolve, reject) => {
 
 
 exports.info = async (obj) => {
+    
     try {
         if (!pool) {
             pool = await new sql.ConnectionPool(con.condb1()).connect();
@@ -78,9 +97,10 @@ exports.info = async (obj) => {
         }
 
         let kerry_no = await setFormatch(obj);
-       
         let address =await getAddress(kerry_no)
-        await loop_kerry(address)
+        let loop= await loop_kerry(address)
+       
+        return obj_arr
       
 
     } catch (error) {
