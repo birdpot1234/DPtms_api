@@ -106,7 +106,6 @@ const call = async (shipID) => {
     let result = await trackingAPI(token, JSON.stringify(arr))
     if (result.responseStatus.code === "200") { // success
         result.shipmentItems.forEach(async (el, i) => {
-            console.log(el)
             let obj = {
                 con_no: shipID[i].con_no,
                 ref_no: shipID[i].ref_no,
@@ -117,7 +116,7 @@ const call = async (shipID) => {
             }
 
             await update(obj) // update DHL_Info
-            await insert(obj) // insert DHL_Info_Tran
+            await insert(obj) // insert DHL_Info_Trans
         })
 
         console.log('success tracking')
@@ -142,19 +141,19 @@ const update = async (obj) => {
     }
 }
 
-// insert DHL_Info_Tran
+// insert DHL_Info_Trans
 const insert = async (obj) => {
     await pool
     try {
         const { status_code, status_desc, date, location, con_no, ref_no } = obj;
         const request = pool.request();
-        const _sql = `INSERT INTO DHL_Info_Tran(con_no, status_code, status_desc, update_date, ref_no, location) \
+        const _sql = `INSERT INTO DHL_Info_Trans(con_no, status_code, status_desc, update_date, ref_no, location) \
         VALUES('${con_no}', '${status_code}', '${status_desc}', '${date}', '${ref_no}', '${location}')`;
 
         try {
             await request.query(_sql)
         } catch (error) {
-            console.log('error insert DHL_Info_Tran', JSON.stringify({ error }))
+            console.log('error insert DHL_Info_Trans', JSON.stringify({ error }))
         }
     } catch (error) {
         console.log(error)
@@ -175,7 +174,6 @@ const trackingAPI = (token, arr) => new Promise((resolve, reject) => {
 })
 
 const trackingBody = (token, shipID) => {
-    console.log(shipID)
     return `{
         "trackItemRequest": {
             "hdr": {
