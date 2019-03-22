@@ -17,6 +17,7 @@ const update_status = require('./kerry_api/update_status');
 const tms_assign = require('./tms_App/tms_assignToMass');
 const api_geocoding = require('./tms_App/api_geocoding');
 const api_uploadslip = require('./tms_App/tms_uploadslip');
+const dhl_creation = require('./dhl_api/shipmentCreation')
 // const api_checkEmail = require('./tms_App/tms_EvaluationForm/tms_checkEmail');
 // const api_insertEmail = require('./tms_App/tms_EvaluationForm/tms_insertEmail');
 // const api_updateEmail = require('./tms_App/tms_EvaluationForm/tms_updateEmail');
@@ -54,7 +55,11 @@ app.use("/", api_uploadslip);
 // app.use("/", api_checkEmail);
 // app.use("/", api_insertEmail);
 app.use("/", dhl_info); // dhl
+<<<<<<< Updated upstream
 app.use("/", test);
+=======
+app.use("/",dhl_creation);
+>>>>>>> Stashed changes
 // app.use("/", api_updateEmail);
 app.get('/', (req, res) => {
     res.render('index');
