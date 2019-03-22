@@ -55,11 +55,8 @@ app.use("/", api_uploadslip);
 // app.use("/", api_checkEmail);
 // app.use("/", api_insertEmail);
 app.use("/", dhl_info); // dhl
-<<<<<<< Updated upstream
-app.use("/", test);
-=======
+//app.use("/", test);
 app.use("/",dhl_creation);
->>>>>>> Stashed changes
 // app.use("/", api_updateEmail);
 app.get('/', (req, res) => {
     res.render('index');
