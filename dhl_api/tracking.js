@@ -7,7 +7,7 @@ require('moment/locale/th')
 
 var pool;
 let token = null // use
-
+const statusCode = [77093, 77225]
 /*####################### AUTHEN DHL #######################*/
 // const shipmentAPI = (token) => {
 //     fetch("https://sandbox.dhlecommerce.asia/rest/v3/Shipment", {
@@ -84,7 +84,7 @@ const get_shipID = async () => {
     await pool;
     try {
         const request = pool.request()
-        const _sql = "SELECT con_no FROM DHL_Info";
+        const _sql = `SELECT ref_no, con_no FROM DHL_Info WHERE status_code <> '${statusCode[0]}' AND status_code <> '${statusCode[1]}'`;
         const result = await request.query(_sql)
         return result.recordset;
     } catch (error) {
@@ -95,57 +95,70 @@ const get_shipID = async () => {
 // เรียกฟังก์ชั่น TRACKING => DHL & UPDATE + INSERT
 const call = async (shipID) => {
     let arr = [];
-    shipID.forEach(element => {
-        arr.push(`"${element.con_no}"`)
+
+    shipID.forEach((element, i) => {
+        arr.push(`${element.ref_no}`) // ["", ""]
     });
 
+
+
     // ####### CALL API TRACKING #######
-    // let result = await trackingAPI(token, arr)
+    let result = await trackingAPI(token, JSON.stringify(arr))
+    if (result.responseStatus.code === "200") { // success
+        result.shipmentItems.forEach(async (el, i) => {
+            console.log(el)
+            let obj = {
+                con_no: shipID[i].con_no,
+                ref_no: shipID[i].ref_no,
+                status_code: el.events[el.events.length - 1].status,
+                status_desc: el.events[el.events.length - 1].description,
+                date: el.events[el.events.length - 1].dateTime,
+                location: el.events[el.events.length - 1].address.city
+            }
 
-    let obj = {
-        status_code: "7555",
-        status_desc: "SUMMITED",
-        date: moment().format("YYYY-MM-DD HH:mm:ss"),
-        location: "Bangkok"
+            await update(obj) // update DHL_Info
+            await insert(obj) // insert DHL_Info_Tran
+        })
+
+        console.log('success tracking')
     }
-
-    update(arr, obj) // update DHL_Info
-    insert(arr, obj) // insert DHL_Info_Tran
 }
 
 // update DHL_Info [Head]
-const update = async (arr, obj) => {
+const update = async (obj) => {
     await pool
     try {
-        const { status_code, status_desc, date, location } = obj;
+        const { status_code, status_desc, date, location, ref_no } = obj;
         const request = pool.request();
-        arr.forEach(async el => {
-            // findindex
-            const _sql = `UPDATE DHL_Info SET status_code='${status_code}', status_desc='${status_desc}', update_date='${date}', \
-            location='${location}' WHERE con_no=${el.replace(/"/g, "'")}`
-            try {
-                await request.query(_sql)
-            } catch (error) {
-                console.log("update error", JSON.stringify({ error }))
-            }
-        })
+        const _sql = `UPDATE DHL_Info SET status_code='${status_code}', status_desc='${status_desc}', update_date='${date}', \
+        location='${location}' WHERE ref_no='${ref_no}'`
+        try {
+            await request.query(_sql)
+        } catch (error) {
+            console.log("update error", JSON.stringify({ error }))
+        }
     } catch (error) {
         console.log('error update DHL_Info', JSON.stringify({ error }))
     }
 }
 
 // insert DHL_Info_Tran
-const insert = async (arr, obj) => {
+const insert = async (obj) => {
     await pool
     try {
-        const { status_code, status_desc, date, location } = obj;
+        const { status_code, status_desc, date, location, con_no, ref_no } = obj;
         const request = pool.request();
-        // findindex
+        const _sql = `INSERT INTO DHL_Info_Tran(con_no, status_code, status_desc, update_date, ref_no, location) \
+        VALUES('${con_no}', '${status_code}', '${status_desc}', '${date}', '${ref_no}', '${location}')`;
 
+        try {
+            await request.query(_sql)
+        } catch (error) {
+            console.log('error insert DHL_Info_Tran', JSON.stringify({ error }))
+        }
     } catch (error) {
         console.log(error)
     }
-    // console.log(arr, obj)
 }
 
 const trackingAPI = (token, arr) => new Promise((resolve, reject) => {
@@ -162,6 +175,7 @@ const trackingAPI = (token, arr) => new Promise((resolve, reject) => {
 })
 
 const trackingBody = (token, shipID) => {
+    console.log(shipID)
     return `{
         "trackItemRequest": {
             "hdr": {
@@ -175,7 +189,7 @@ const trackingBody = (token, shipID) => {
                 "soldToAccountId": "5999999100",
                 "pickupAccountId": "5999999100",
                 "ePODRequired": "Y", 
-                "trackingReferenceNumber": [${shipID}]
+                "trackingReferenceNumber": ${shipID}
             }
         }
     }`
@@ -189,10 +203,8 @@ exports.tracking = async () => {
         }
 
         token = await authen.authen(pool); // get token from API Token
-
         let shipID = await get_shipID(); // เอาเลข SHIP ID [1]
         await call(shipID); // ส่งไป TRACKING
-
     } catch (error) {
         console.log(error)
     }

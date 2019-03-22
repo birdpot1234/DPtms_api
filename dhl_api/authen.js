@@ -31,7 +31,7 @@ const insert_token = async () => {
     try {
         let { token } = await authAPI();
         const request = pool.request();
-        const date = moment().format("YYYY-MM-DD HH:mm:ss");
+        const date = moment().format("YYYY-MM-DD HH:mm:ss"); // getdate()
         const _sql = `INSERT INTO DHL_Token(DHL_Token, update_datetime) VALUES('${token}', '${date}')`
         await request.query(_sql);
         return { token, date }
@@ -57,7 +57,7 @@ const update_token = async (oldtoken) => {
 }
 
 const validate_token = async () => {
-    let object = await get_token();
+    let object = await get_token(); // { token ,date }
     let now = moment().format();
     let end = moment(object.date).format()
     var duration = moment.duration(moment(now).diff(end));
@@ -83,6 +83,7 @@ const authAPI = () => new Promise((resolve, reject) => {
     }).catch((err) => console.log(err))
 })
 
+// main
 exports.authen = async (_pool) => {
     try {
         pool = _pool;

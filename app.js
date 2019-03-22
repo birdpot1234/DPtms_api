@@ -12,6 +12,7 @@ const regis_2 = require('./tms_App/tms_registstep_2');
 const regis_3 = require('./tms_App/tms_registstep_3');
 const info = require('./kerry_api/info');
 const dhl_info = require('./dhl_api/info');
+const test = require('./test_api/route')
 const update_status = require('./kerry_api/update_status');
 const tms_assign = require('./tms_App/tms_assignToMass');
 const api_geocoding = require('./tms_App/api_geocoding');
@@ -53,6 +54,7 @@ app.use("/", api_uploadslip);
 // app.use("/", api_checkEmail);
 // app.use("/", api_insertEmail);
 app.use("/", dhl_info); // dhl
+app.use("/", test);
 // app.use("/", api_updateEmail);
 app.get('/', (req, res) => {
     res.render('index');
@@ -75,10 +77,9 @@ app.use((error, req, res, next) => {
 })
 
 /*####################### SCHEDULE TRACKING DHL #######################*/
-schedule.scheduleJob("0 */10 * * * *", async () => {
+schedule.scheduleJob("0 */1 * * * *", async () => {
     console.log("Schedule :::", moment().format())
-    // await tracking.tracking();
+    await tracking.tracking();
 })
 
-// 
 module.exports = app;
