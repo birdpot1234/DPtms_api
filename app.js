@@ -15,6 +15,8 @@ const dhl_info = require('./dhl_api/info');
 const test = require('./test_api/route')
 const update_status = require('./kerry_api/update_status');
 const tms_assign = require('./tms_App/tms_assignToMass');
+const confirmwork = require('./tms_App/work/checkwork');    /* [##############################################] */
+const trackingApp = require('./tms_App/tracking/tracking'); /* [##############################################] */
 const api_geocoding = require('./tms_App/api_geocoding');
 const api_uploadslip = require('./tms_App/tms_uploadslip');
 const dhl_creation = require('./dhl_api/shipmentCreation')
@@ -52,11 +54,14 @@ app.use("/", update_status);
 app.use("/", tms_assign);
 app.use("/", api_geocoding);
 app.use("/", api_uploadslip);
+
+app.use("/", confirmwork); /* [##############################################] */
+app.use("/", trackingApp); /* [##############################################] */
 // app.use("/", api_checkEmail);
 // app.use("/", api_insertEmail);
 app.use("/", dhl_info); // dhl
-//app.use("/", test);
-app.use("/",dhl_creation);
+app.use("/", test);
+app.use("/", dhl_creation);
 // app.use("/", api_updateEmail);
 app.get('/', (req, res) => {
     res.render('index');
@@ -70,6 +75,7 @@ app.use((req, res, next) => {
 })
 
 app.use((error, req, res, next) => {
+    console.log(error)
     res.status(error.status || 500);
     res.json({
         error: {
@@ -79,9 +85,9 @@ app.use((error, req, res, next) => {
 })
 
 /*####################### SCHEDULE TRACKING DHL #######################*/
-schedule.scheduleJob("0 */1 * * * *", async () => {
-    console.log("Schedule :::", moment().format())
-    await tracking.tracking();
-})
+// schedule.scheduleJob("0 */1 * * * *", async () => {
+//     console.log("Schedule :::", moment().format())
+//     await tracking.tracking();
+// })
 
 module.exports = app;

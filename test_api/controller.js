@@ -1,7 +1,7 @@
 const con = require('../connect_sql')
 const sql = require('mssql')
 const moment = require('moment')
-
+require('moment/locale/th')
 const messenger = "AA"
 exports.restart = () => async (req, res, next) => {
     let pool = await new sql.ConnectionPool(con.condb1()).connect();
@@ -47,4 +47,43 @@ exports.restart = () => async (req, res, next) => {
         res.status(400).json({ success: false, message: JSON.stringify(error) })
         console.log(error)
     }
-} 
+}
+
+exports.update = () => async (req, res, next) => {
+    let pool = await new sql.ConnectionPool(con.condb1()).connect();
+    pool.on("error", err => { throw (err) })
+    await pool;
+    try {
+        let _sql = `SELECT invoiceNumber,MessReport, Datetime, Status  FROM TMS_updateMessReport`;
+        let result = await pool.request().query(_sql);
+        console.log(result.recordset.length)
+        result.recordset.forEach(async (el, i) => {
+            let update = `UPDATE App_FinishApp SET MessengerID='${el.MessReport}', 
+                datetime='${moment(el.Datetime).add(-1, 'd').format('YYYY-MM-DD HH:mm:ss')}', status='${el.Status}', statusclear =1 
+                WHERE invoiceNumber='${el.invoiceNumber}'
+            `
+
+            // 
+            // console.log(update)
+            await pool.request().query(update);
+            if (i === result.recordset.length - 1) {
+                console.log('success update')
+                res.status(200).json({ success: true, result: result.recordset })
+            }
+        })
+
+        // res.status(200).json({ success: true, result: result.recordset })
+
+    } catch (error) {
+        console.log(error)
+    }
+
+}
+
+// DECLARE @cnt INT = 0;
+// WHILE @cnt < 88
+// BEGIN
+
+//    SET @cnt = @cnt + 1;
+//    UPDATE App_FinishApp SET MessengerID = (select MessReport FROM TMS_updateMessReport),datetime = (select Datetime FROM TMS_updateMessReport),status = (select Status FROM TMS_updateMessReport),statusclear =1  where invoiceNumber in (select invoiceNumber FROM TMS_updateMessReport)
+// END

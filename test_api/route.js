@@ -13,6 +13,12 @@ router.get('/test/restart',
         res.status(200).json({ success: true, result: req.result })
     })
 
+router.get('/test/update',
+    controller.update(),
+    (req, res, next) => {
+        res.status(200).json({ success: true, result: req.result })
+    })
+
 
 
 module.exports = router;
